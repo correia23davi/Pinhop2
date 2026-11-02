@@ -181,6 +181,27 @@ body {
     cursor: pointer;
 }
 
+.btn-reset {
+  background: rgba(248, 81, 73, 0.1); /* Fundo vermelho transparente */
+  color: var(--red);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.btn-reset:hover {
+  background: rgba(248, 81, 73, 0.2);
+  border-color: var(--red);
+}
+.btn-reset:active {
+  transform: scale(0.95);
+}
 .clock {
     font-family: "SF Mono", Monaco, monospace;
     font-size: 1.1rem;
@@ -292,7 +313,7 @@ body {
     }
 
 .gauge-value {
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     margin-top: -0.6rem;

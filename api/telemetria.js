@@ -51,7 +51,7 @@ async function ler(limit) {
 export default async function handler(req, res) {
   // CORS: permite o front (outro domínio ou localhost) consumir a API
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   res.setHeader("Cache-Control", "no-store");
 
@@ -80,6 +80,20 @@ export default async function handler(req, res) {
       const limit = Math.min(parseInt(req.query.limit) || 50, MAX_HISTORICO);
       return res.status(200).json(await ler(limit));
     }
+
+    if (req.method === "DELETE") {
+      if (!REDIS_URL) {
+        memoria.ultima = null;
+        memoria.historico = [];
+        return res.status(200).json({ ok: true, msg: "Memória limpa" });
+      }
+
+        await redis([
+        ["DEL", "telemetria:ultima"],
+        ["DEL", "telemetria:historico"]
+      ]);
+      return res.status(200).json({ ok: true, msg: "Dados do Redis apagados" });
+    }  
 
     return res.status(405).json({ erro: "Método não permitido" });
   } catch (e) {
