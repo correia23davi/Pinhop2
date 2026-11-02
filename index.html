@@ -70,6 +70,9 @@
                     <option value="100">Amostras (100)</option>
                     <option value="200">Amostras (200)</option>
                 </select>
+                    <button class="btn-reset" id="btnReset" title="Apagar histórico">
+                    Limpar Dados
+                    </button>   
             </div>
             <div style="display:flex; align-items:center; gap:1rem;">
                 <div style="text-align:right;">
@@ -155,7 +158,7 @@
 
     <script>
         const API_BASE = "/api/telemetria";
-        const POLL_MS = 2000;
+        const POLL_MS = 1000;
         const STALE_MS = 10000;
 
         const LIMITS = {
@@ -214,7 +217,7 @@
         const pct = Math.max(0, Math.min(1, (value - limits.min) / (limits.max - limits.min)));
         const offset = ARC_LEN * (1 - pct);
         document.getElementById(arcId).style.strokeDashoffset = offset;
-        document.getElementById(valId).textContent = value;
+        document.getElementById(valId).textContent = fmt(value, 1);
 
         let cls = "ok", label = "● Estável";
         if (value >= limits.crit) { cls = "crit"; label = "● Crítico"; }
@@ -266,8 +269,8 @@
         function atualizarGauges(historico) {
         if (!historico.length) return;
         const u = historico[0];
-        setGauge("gVelArc", u.velocidade, LIMITS.vel, "gVelVal", "gVelStatus");
-        setGauge("gDistArc", u.distancia, LIMITS.dist, "gDistVal", "gDistStatus");
+        setGauge("gVelArc", u.velocidade, LIMITS.vel, "gVelVal", "gVelStatus", 1);
+        setGauge("gDistArc", u.distancia, LIMITS.dist, "gDistVal", "gDistStatus", 3);
         }
 
         function atualizarGraficos(historico) {
@@ -330,6 +333,20 @@
         txt.textContent = "OFFLINE";
         }
         }
+        
+        document.getElementById("btnReset").addEventListener("click", async () => {
+            if (!confirm("Tem certeza que deseja apagar TODO o histórico?")) return;
+            const btn = document.getElementById("btnReset");
+            btn.textContent = "Apagando...";
+            btn.disabled = true;
+            try {
+                await fetch(API_BASE, { method: "DELETE" });
+                document.getElementById("sbVel").textContent = "—";
+                document.getElementById("sbDist").textContent = "—";
+                atualizar();
+            } catch (e) { alert("Erro ao limpar"); } 
+            finally { btn.textContent = "Limpar Dados"; btn.disabled = false; }
+            });
 
         document.getElementById("selLimit").addEventListener("change", atualizar);
         atualizar();
