@@ -1,0 +1,422 @@
+:root {
+    --bg: #152129;
+    --bg-sidebar: #0e161b;
+    --card: #0a1114;
+    --border: #232833;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --accent: #3fb950;
+    --red: #f85149;
+    --yellow: #d29922;
+    --blue: #58a6ff;
+    --purple: #bc8cff;
+    --cyan: #39d3bb;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Franklin Gothic Book", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 280px;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: 0.05em;
+}
+
+.logo-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--cyan), var(--blue));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.sidebar h2 {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.6rem;
+}
+
+.alarm-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+}
+
+    .alarm-item:last-child {
+        border-bottom: none;
+    }
+
+.alarm-label {
+    color: var(--muted);
+}
+
+.alarm-val {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+    .status-badge.ok {
+        background: rgba(63,185,80,0.15);
+        color: var(--accent);
+    }
+
+    .status-badge.warn {
+        background: rgba(210,153,34,0.15);
+        color: var(--yellow);
+    }
+
+    .status-badge.crit {
+        background: rgba(248,81,73,0.15);
+        color: var(--red);
+    }
+
+    .status-badge.muted {
+        background: rgba(125,133,144,0.15);
+        color: var(--muted);
+    }
+
+.hist-table {
+    width: 100%;
+    font-size: 0.75rem;
+    border-collapse: collapse;
+}
+
+    .hist-table th {
+        text-align: left;
+        color: var(--muted);
+        font-weight: 500;
+        padding: 0.3rem 0.2rem;
+        border-bottom: 1px solid var(--border);
+        text-transform: uppercase;
+        font-size: 0.65rem;
+        letter-spacing: 0.05em;
+    }
+
+    .hist-table td {
+        padding: 0.35rem 0.2rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .hist-table tr:last-child td {
+        border-bottom: none;
+    }
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 1.2rem 1.5rem;
+    gap: 1rem;
+}
+
+.topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+    .topbar .controls {
+        display: flex;
+        gap: 0.6rem;
+        align-items: center;
+        font-size: 0.8rem;
+    }
+
+.select {
+    background: var(--card);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.clock {
+    font-family: "SF Mono", Monaco, monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--text);
+}
+
+.date {
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+
+.online-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.3rem 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+    .online-pill .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--muted);
+    }
+
+    .online-pill.online .dot {
+        background: var(--accent);
+        box-shadow: 0 0 8px var(--accent);
+    }
+
+    .online-pill.offline .dot {
+        background: var(--red);
+    }
+
+    .online-pill.stale .dot {
+        background: var(--yellow);
+    }
+
+.gauges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.gauge-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.2rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+    .gauge-card .head {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .gauge-card .title {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text);
+    }
+
+        .gauge-card .title small {
+            color: var(--muted);
+            font-size: 0.65rem;
+        }
+
+    .gauge-card .tag {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.45rem;
+        border-radius: 4px;
+        background: rgba(125,133,144,0.15);
+        color: var(--muted);
+        letter-spacing: 0.05em;
+    }
+
+.gauge-svg {
+    width: 100%;
+    max-width: 220px;
+    height: 130px;
+}
+
+    .gauge-svg .arc-bg {
+        stroke: #1e232c;
+    }
+
+    .gauge-svg .arc-fill {
+        transition: stroke-dashoffset 0.4s ease;
+    }
+
+    .gauge-svg .needle {
+        transition: transform 0.4s ease;
+        transform-origin: 100px 100px;
+    }
+
+.gauge-value {
+    font-size: 2rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    margin-top: -0.6rem;
+    line-height: 1;
+}
+
+    .gauge-value .unit {
+        font-size: 0.85rem;
+        color: var(--muted);
+        font-weight: 400;
+    }
+
+.gauge-status {
+    margin-top: 0.6rem;
+    font-size: 0.72rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+    .gauge-status.ok {
+        background: rgba(63,185,80,0.12);
+        color: var(--accent);
+    }
+
+    .gauge-status.warn {
+        background: rgba(210,153,34,0.12);
+        color: var(--yellow);
+    }
+
+    .gauge-status.crit {
+        background: rgba(248,81,73,0.12);
+        color: var(--red);
+    }
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 1000px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    height: 280px;
+    position: relative;
+}
+
+    .chart-card .head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.6rem;
+    }
+
+        .chart-card .head h3 {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+            .chart-card .head h3 small {
+                color: var(--muted);
+                font-size: 0.7rem;
+                margin-left: 0.4rem;
+            }
+
+    .chart-card .updated {
+        font-size: 0.7rem;
+        color: var(--muted);
+    }
+
+    .chart-card canvas {
+        max-height: 200px;
+    }
+
+.legend-bar {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.8rem 1.2rem;
+    font-size: 0.75rem;
+    flex-wrap: wrap;
+}
+
+    .legend-bar .leg {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+        .legend-bar .leg .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .legend-bar .leg .desc {
+            color: var(--muted);
+            font-size: 0.7rem;
+        }
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}

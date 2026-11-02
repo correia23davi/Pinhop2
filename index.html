@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Telemetria ESP32 / Wokwi</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="logo">
+            <span>TELEMETRIA</span>
+        </div>
+
+        <div>
+            <h2>Sistema de alarmes</h2>
+            <div class="alarm-item">
+                <span class="alarm-label">Velocidade</span>
+                <span>
+                    <span class="alarm-val" id="sbVel">—</span>
+                    <span class="status-badge muted" id="sbVelBadge">—</span>
+                </span>
+            </div>
+            <div class="alarm-item">
+                <span class="alarm-label">Inclinação</span>
+                <span>
+                    <span class="alarm-val" id="sbIncl">—</span>
+                    <span class="status-badge muted" id="sbInclBadge">—</span>
+                </span>
+            </div>
+        </div>
+
+        <div>
+            <h2>Distância percorrida</h2>
+            <div class="alarm-item">
+                <span class="alarm-label">Total</span>
+                <span class="alarm-val" id="sbDist">—</span>
+            </div>
+            <div class="alarm-item">
+                <span class="alarm-label">Média vel.</span>
+                <span class="alarm-val" id="sbMedia">—</span>
+            </div>
+            <div class="alarm-item">
+                <span class="alarm-label">Máxima vel.</span>
+                <span class="alarm-val" id="sbMax">—</span>
+            </div>
+        </div>
+
+        <div>
+            <h2>Histórico</h2>
+            <table class="hist-table">
+                <thead>
+                    <tr><th>Hora</th><th>Vel.</th><th>Tipo</th></tr>
+                </thead>
+                <tbody id="histBody">
+                    <tr><td colspan="3" style="color:var(--muted); text-align:center; padding:1rem;">aguardando…</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div class="controls">
+                <select class="select" id="selLimit">
+                    <option value="20">Amostras (20)</option>
+                    <option value="50" selected>Amostras (50)</option>
+                    <option value="100">Amostras (100)</option>
+                    <option value="200">Amostras (200)</option>
+                </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:1rem;">
+                <div style="text-align:right;">
+                    <div class="clock" id="clock">--:--:--</div>
+                    <div class="date" id="date">--</div>
+                </div>
+                <div class="online-pill" id="onlinePill">
+                    <span class="dot"></span>
+                    <span id="onlineTxt">OFFLINE</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="gauges-grid">
+            <div class="gauge-card">
+                <div class="head">
+                    <div class="title">Velocidade <small>(km/h)</small></div>
+                    <span class="tag">0 - 160</span>
+                </div>
+                <svg class="gauge-svg" viewBox="0 0 200 130">
+                    <path class="arc-bg" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="12" stroke-linecap="round" />
+                    <path class="arc-fill" id="gVelArc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradVel)" stroke-width="12" stroke-linecap="round"
+                          stroke-dasharray="251.3" stroke-dashoffset="251.3" />
+                    <defs>
+                        <linearGradient id="gradVel" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#3fb950" />
+                            <stop offset="50%" stop-color="#d29922" />
+                            <stop offset="100%" stop-color="#f85149" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="gauge-value"><span id="gVelVal">0.0</span> <span class="unit">km/h</span></div>
+                <div class="gauge-status ok" id="gVelStatus">● Estável</div>
+            </div>
+
+            <!-- Distância -->
+            <div class="gauge-card">
+                <div class="head">
+                    <div class="title">Distância <small>(km)</small></div>
+                    <span class="tag">0 - 10</span>
+                </div>
+                <svg class="gauge-svg" viewBox="0 0 200 130">
+                    <path class="arc-bg" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="12" stroke-linecap="round" />
+                    <path class="arc-fill" id="gDistArc" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gradDist)" stroke-width="12" stroke-linecap="round"
+                          stroke-dasharray="251.3" stroke-dashoffset="251.3" />
+                    <defs>
+                        <linearGradient id="gradDist" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#58a6ff" />
+                            <stop offset="100%" stop-color="#bc8cff" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="gauge-value"><span id="gDistVal">0.000</span> <span class="unit">km</span></div>
+                <div class="gauge-status ok" id="gDistStatus">● OK</div>
+            </div>
+
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="head">
+                    <h3>Velocidade <small>km/h</small></h3>
+                    <span class="updated" id="velUpdated">—</span>
+                </div>
+                <canvas id="chartVel"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="head">
+                    <h3>Inclinação <small>graus</small></h3>
+                    <span class="updated" id="inclUpdated">—</span>
+                </div>
+                <canvas id="chartIncl"></canvas>
+            </div>
+        </div>
+
+        <div class="legend-bar">
+            <strong style="font-size:0.75rem; letter-spacing:0.1em; color:var(--muted);">LEGENDA</strong>
+            <span class="leg"><span class="dot" style="background:var(--accent);"></span> Normal</span>
+            <span class="leg"><span class="dot" style="background:var(--yellow);"></span> Alerta</span>
+            <span class="leg"><span class="dot" style="background:var(--red);"></span> Crítico</span>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = "/api/telemetria";
+        const POLL_MS = 2000;
+        const STALE_MS = 10000;
+
+        const LIMITS = {
+        vel:  { min: 0, max: 160, warn: 100, crit: 140 },
+        dist: { min: 0, max: 10, warn: 7, crit: 9 },
+        };
+
+        function parseData(s) {
+        if (!s || typeof s !== "string") return null;
+        let d = new Date(s);
+        if (!isNaN(d.getTime())) return d;
+        const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4}),?\s+(\d{2}):(\d{2}):(\d{2})$/);
+        if (m) {
+        const [, dia, mes, ano, hh, mm, ss] = m;
+        return new Date(`${ano}-${mes}-${dia}T${hh}:${mm}:${ss}-03:00`);
+        }
+        return null;
+        }
+        function fmt(n, c=1) { return Number.isFinite(n) ? n.toFixed(c) : "—"; }
+        function nowStr(d) {
+        if (!d) return "—";
+        return d.toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour:"2-digit", minute:"2-digit", second:"2-digit" });
+        }
+
+        const commonOpts = {
+        responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+        plugins: { legend: { display: false } },
+        elements: { point: { radius: 0, hoverRadius: 4 } },
+        scales: {
+        x: { ticks: { color:"#7d8590", font:{ size:10 }, maxTicksLimit:6 }, grid:{ color:"#1e232c" } },
+        y: { ticks: { color:"#7d8590", font:{ size:10 } }, grid:{ color:"#1e232c" } },
+        },
+        interaction: { intersect: false, mode: "index" },
+        };
+
+        const chartVel = new Chart(document.getElementById("chartVel"), {
+        type: "line",
+        data: { labels: [], datasets: [{
+        data: [], borderColor:"#f85149", backgroundColor:"rgba(248,81,73,0.12)",
+        fill:true, tension:0.3, borderWidth:2,
+        }]},
+        options: { ...commonOpts, scales: { ...commonOpts.scales, y:{ ...commonOpts.scales.y, min:0, max:160 } } },
+        });
+
+        const chartIncl = new Chart(document.getElementById("chartIncl"), {
+        type: "line",
+        data: { labels: [], datasets: [{
+        data: [], borderColor:"#d29922", backgroundColor:"rgba(210,153,34,0.12)",
+        fill:true, tension:0.3, borderWidth:2,
+        }]},
+        options: { ...commonOpts, scales: { ...commonOpts.scales, y:{ ...commonOpts.scales.y, min:-90, max:90 } } },
+        });
+
+        const ARC_LEN = 251.3; // comprimento do arco (path d="M 20 100 A 80 80 0 0 1 180 100")
+        function setGauge(arcId, value, limits, valId, statusId) {
+        const pct = Math.max(0, Math.min(1, (value - limits.min) / (limits.max - limits.min)));
+        const offset = ARC_LEN * (1 - pct);
+        document.getElementById(arcId).style.strokeDashoffset = offset;
+        document.getElementById(valId).textContent = value;
+
+        let cls = "ok", label = "● Estável";
+        if (value >= limits.crit) { cls = "crit"; label = "● Crítico"; }
+        else if (value >= limits.warn) { cls = "warn"; label = "● Alerta"; }
+        const sEl = document.getElementById(statusId);
+        sEl.className = "gauge-status " + cls;
+        sEl.textContent = label;
+        }
+
+        function setBadge(id, level) {
+        const el = document.getElementById(id);
+        el.className = "status-badge " + level;
+        }
+
+        function atualizarSidebar(historico) {
+        if (!historico.length) return;
+        const u = historico[0];
+
+        document.getElementById("sbVel").textContent = fmt(u.velocidade, 1);
+        setBadge("sbVelBadge", u.velocidade >= LIMITS.vel.crit ? "crit" : u.velocidade >= LIMITS.vel.warn ? "warn" : "ok");
+        document.getElementById("sbVelBadge").textContent = u.velocidade >= LIMITS.vel.crit ? "CRÍT" : u.velocidade >= LIMITS.vel.warn ? "ALERTA" : "OK";
+
+        document.getElementById("sbIncl").textContent = fmt(u.inclinacao_x, 1) + "°";
+        setBadge("sbInclBadge", Math.abs(u.inclinacao_x) > 45 ? "warn" : "ok");
+        document.getElementById("sbInclBadge").textContent = Math.abs(u.inclinacao_x) > 45 ? "ALERTA" : "OK";
+
+
+        document.getElementById("sbDist").textContent = fmt(u.distancia, 3) + " km";
+
+        let somaV = 0, somaT = 0;
+        for (let i=1;i<historico.length;i++){
+        const a=parseData(historico[i].recebido_em), b=parseData(historico[i-1].recebido_em);
+        if(!a||!b) continue;
+        const dt=Math.abs(b.getTime()-a.getTime())/1000;
+        if(dt>0&&dt<60){ somaV+=historico[i].velocidade*dt; somaT+=dt; }
+        }
+        document.getElementById("sbMedia").textContent = fmt(somaT>0 ? somaV/somaT : u.velocidade, 1) + " km/h";
+        const vMax = Math.max(...historico.map(r=>r.velocidade));
+        document.getElementById("sbMax").textContent = fmt(vMax, 1) + " km/h";
+
+        const body = document.getElementById("histBody");
+        const linhas = historico.slice(0, 8).map(r => {
+        const d = parseData(r.recebido_em);
+        return `<tr><td style="color:var(--muted);">${nowStr(d)}</td><td>${fmt(r.velocidade,1)}</td><td style="color:var(--muted); font-size:0.7rem;">km/h</td></tr>`;
+        }).join("");
+        body.innerHTML = linhas || `<tr><td colspan="3" style="color:var(--muted); text-align:center; padding:1rem;">sem dados</td></tr>`;
+        }
+
+        function atualizarGauges(historico) {
+        if (!historico.length) return;
+        const u = historico[0];
+        setGauge("gVelArc", u.velocidade, LIMITS.vel, "gVelVal", "gVelStatus");
+        setGauge("gDistArc", u.distancia, LIMITS.dist, "gDistVal", "gDistStatus");
+        }
+
+        function atualizarGraficos(historico) {
+        const cron = [...historico].reverse();
+        const labels = cron.map(r => nowStr(parseData(r.recebido_em)));
+
+        chartVel.data.labels = labels;
+        chartVel.data.datasets[0].data = cron.map(r => Number.isFinite(r.velocidade) ? r.velocidade : null);
+        chartVel.update();
+
+        chartIncl.data.labels = labels;
+        chartIncl.data.datasets[0].data = cron.map(r => Number.isFinite(r.inclinacao_x) ? r.inclinacao_x : null);
+        chartIncl.update();
+
+        if (cron.length) {
+        const ult = nowStr(parseData(cron[cron.length-1].recebido_em));
+        document.getElementById("velUpdated").textContent = "Atualizado: " + ult;
+        document.getElementById("inclUpdated").textContent = "Atualizado: " + ult;
+        }
+        }
+
+        function atualizarRelogio() {
+        const agora = new Date();
+        document.getElementById("clock").textContent = agora.toLocaleTimeString("pt-BR", { timeZone:"America/Sao_Paulo" });
+        document.getElementById("date").textContent = agora.toLocaleDateString("pt-BR", { timeZone:"America/Sao_Paulo" });
+        }
+        setInterval(atualizarRelogio, 1000);
+        atualizarRelogio();
+
+        async function atualizar() {
+        const pill = document.getElementById("onlinePill");
+        const txt  = document.getElementById("onlineTxt");
+        try {
+        const limit = document.getElementById("selLimit").value;
+        const r = await fetch(`${API_BASE}?limit=${limit}`, { cache: "no-store" });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const { ultima, historico } = await r.json();
+
+        if (!ultima || !historico || historico.length === 0) {
+        pill.className = "online-pill stale";
+        txt.textContent = "SEM DADOS";
+        return;
+        }
+
+        const dt = parseData(ultima.recebido_em);
+        if (dt) {
+        const idade = Date.now() - dt.getTime();
+        if (idade < STALE_MS) { pill.className = "online-pill online"; txt.textContent = "ONLINE"; }
+        else { pill.className = "online-pill stale"; txt.textContent = `SEM DADOS (${Math.round(idade/1000)}s)`; }
+        } else {
+        pill.className = "online-pill stale"; txt.textContent = "TIMESTAMP INVÁLIDO";
+        }
+
+        atualizarSidebar(historico);
+        atualizarGauges(historico);
+        atualizarGraficos(historico);
+        } catch (e) {
+        console.error(e);
+        pill.className = "online-pill offline";
+        txt.textContent = "OFFLINE";
+        }
+        }
+
+        document.getElementById("selLimit").addEventListener("change", atualizar);
+        atualizar();
+        setInterval(atualizar, POLL_MS);
+    </script>
+</body>
+</html>
